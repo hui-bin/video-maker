@@ -172,3 +172,4 @@ cython_debug/
 .aider.chat.history.md
 .aider.input.history
 test
+.aider*
