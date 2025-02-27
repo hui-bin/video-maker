@@ -27,6 +27,17 @@ class Settings:
     VIDEO_GENERATION_API_URL = "https://ark.cn-beijing.volces.com/api/v3/contents/generations/tasks"
     VIDEO_GENERATION_API_QUERY_URL = "https://ark.cn-beijing.volces.com/api/v3/contents/generations/tasks/{}"
     VIDEO_GENERATION_MODEL_EP = os.getenv("VIDEO_GENERATION_MODEL_EP")
+    ARK_API_KEY = os.getenv("ARK_API_KEY")
+
+    VIDEO_GENERATION_TIMEOUT = 600  # 秒
+    POLLING_INTERVAL = 5  # 秒
+
+    TTS_API_ENDPOINT = "https://openspeech.bytedance.com/api/v1/tts"
+    TTS_VOICE_TYPE = "zh_male_M392_conversation_wvae_bigtts"
+    TTS_TIMEOUT = 30  # 秒
+
+
+    MAX_RETRIES = 3
 
 
 settings = Settings()
