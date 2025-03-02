@@ -6,7 +6,7 @@ load_dotenv()
 
 class Settings:
     DASHSCOPE_API_KEY = os.getenv("DASHSCOPE_API_KEY")  # 阿里云API Key
-    DEEPSEEK_MODEL = "deepseek-v3"  # 指定模型版本
+    DEEPSEEK_MODEL = "deepseek-chat"  # 指定模型版本
 
     DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
     VOLCANO_AK = os.getenv("VOLCANO_ACCESS_KEY")
@@ -14,7 +14,8 @@ class Settings:
     TTS_API_KEY = os.getenv("TTS_API_KEY")
     DOUYIN_TOKEN = os.getenv("DOUYIN_ACCESS_TOKEN")
 
-    DEEPSEEK_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    # DEEPSEEK_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    DEEPSEEK_URL = "https://api.deepseek.com"
     VOLCANO_IMAGE_SERVICE = "cv"  # 文生图服务标识
     VOLCANO_VIDEO_URL = "https://open.volcengineapi.com/vod/v1/video_ai/gen"
     DOUYIN_UPLOAD_URL = "https://open.douyin.com/api/v2/video/upload/"

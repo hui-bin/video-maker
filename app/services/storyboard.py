@@ -4,12 +4,12 @@ from app.utils.api_clients import deepseek_request
 
 
 def generate_scenes(content: str) -> list[SceneScript]:
-    prompt = f"""请将以下内容转换为6个视频分镜（JSON数组格式）：
+    prompt = f"""请将以下内容转换为3个视频分镜（JSON数组格式）：
     {content}
 
     每个分镜需要包含：
     - description: 画面描述（40字左右，具体包含场景、人物动作、镜头角度）
-    - narration: 解说文案（10字左右，口语化表达）
+    - narration: 解说文案（15字左右，口语化表达）
 
     示例格式：
     [

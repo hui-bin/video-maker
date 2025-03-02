@@ -1,13 +1,13 @@
 import base64
-import json
+import logging
 import time
 import uuid
-import logging
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 
 import requests
-from moviepy.editor import VideoFileClip, AudioFileClip, CompositeAudioClip, concatenate_videoclips
+from moviepy.editor import concatenate_videoclips, ImageClip
+from moviepy.editor import VideoFileClip, AudioFileClip
 
 from app.config import settings
 from app.services.video_gen_core import (
@@ -48,51 +48,51 @@ def generate_videos(scenes: List[dict], image_paths: List[str], task_dir: Path) 
         retries = 0
         MAX_RETRIES = settings.MAX_RETRIES
 
-        # while retries < MAX_RETRIES:
-        #     try:
-        #         # 生成视频
-        raw_video_path = _generate_single_video(
-            image_path=image_path,
-            text_prompt=scene["narration"],
-            task_dir=task_dir,
-            index=idx
-        )
+        while retries < MAX_RETRIES:
+            try:
+                # 生成视频
+                raw_video_path = _generate_single_video(
+                    image_path=image_path,
+                    text_prompt=scene["narration"],
+                    task_dir=task_dir,
+                    index=idx
+                )
 
-        # 生成语音
-        audio_path = _generate_tts(
-            text=scene["narration"],
-            task_dir=task_dir,
-            idx=idx
-        )
+                # 生成语音
+                audio_path = _generate_tts(
+                    text=scene["narration"],
+                    task_dir=task_dir,
+                    idx=idx
+                )
 
-        # 合并音视频
-        merged_path = _merge_audio_video(
-            video_path=raw_video_path,
-            audio_path=audio_path,
-            task_dir=task_dir,
-            index=idx
-        )
+                # 合并音视频
+                merged_path = _merge_audio_video(
+                    video_path=raw_video_path,
+                    audio_path=audio_path,
+                    task_dir=task_dir,
+                    index=idx
+                )
 
-        video_paths.append(merged_path)
-        break
+                video_paths.append(merged_path)
+                break
 
-            # except VideoGenerationError as e:
-            #     logger.error(f"视频生成失败: {str(e)}")
-            #     retries += 1
-            #     if retries >= MAX_RETRIES:
-            #         raise RuntimeError(f"场景 {idx} 视频生成达到最大重试次数")
-            #
-            # except TTSGenerationError as e:
-            #     logger.error(f"语音生成失败: {str(e)}")
-            #     retries += 1
-            #     if retries >= MAX_RETRIES:
-            #         raise RuntimeError(f"场景 {idx} 语音生成达到最大重试次数")
-            #
-            # except Exception as e:
-            #     logger.error(f"未知错误: {str(e)}")
-            #     retries += 1
-            #     if retries >= MAX_RETRIES:
-            #         raise RuntimeError(f"场景 {idx} 处理失败")
+            except VideoGenerationError as e:
+                logger.error(f"视频生成失败: {str(e)}")
+                retries += 1
+                if retries >= MAX_RETRIES:
+                    raise RuntimeError(f"场景 {idx} 视频生成达到最大重试次数")
+
+            except TTSGenerationError as e:
+                logger.error(f"语音生成失败: {str(e)}")
+                retries += 1
+                if retries >= MAX_RETRIES:
+                    raise RuntimeError(f"场景 {idx} 语音生成达到最大重试次数")
+
+            except Exception as e:
+                logger.error(f"未知错误: {str(e)}")
+                retries += 1
+                if retries >= MAX_RETRIES:
+                    raise RuntimeError(f"场景 {idx} 处理失败")
 
     return video_paths
 
@@ -239,15 +239,18 @@ def _merge_audio_video(video_path: Path, audio_path: Path, task_dir: Path, index
         video = VideoFileClip(str(video_path))
         audio = AudioFileClip(str(audio_path))
 
-        # 自动延长音频（循环）
-        def loop_audio(clip, duration):
-            return clip.audio_loop(duration=duration)
+        # 以音频时长为准处理视频
+        if video.duration > audio.duration:
+            # 视频时长超过音频时长，裁剪视频
+            video = video.subclip(0, audio.duration)
+        elif video.duration < audio.duration:
+            # 视频时长小于音频时长，复制最后一帧画面补足时长
+            last_frame = video.get_frame(video.duration - 1)
+            extra_clip = ImageClip(last_frame).set_duration(audio.duration - video.duration)
+            video = concatenate_videoclips([video, extra_clip])
 
-        # 处理音频长度
-        processed_audio = audio.fx(loop_audio, duration=video.duration)
-
-        # 合并音视频
-        final_clip = video.set_audio(processed_audio)
+        # 设置音频
+        final_clip = video.set_audio(audio)
 
         # 输出设置
         final_clip.write_videofile(
@@ -256,7 +259,7 @@ def _merge_audio_video(video_path: Path, audio_path: Path, task_dir: Path, index
             audio_codec="aac",
             threads=4,
             verbose=False,
-            logger=None  # 禁用moviepy日志
+            logger=None  # 禁用 moviepy 日志
         )
 
         logger.info(f"合并完成: {output_path}")

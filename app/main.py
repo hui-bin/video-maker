@@ -207,3 +207,18 @@ async def _process_video(request: VideoRequest, task_dir: Path):
         logging.error(f"任务失败：{str(e)}", exc_info=True)
         # 可以添加邮件/通知等错误处理逻辑
         # raise  # 保持异常传播
+
+# 添加以下代码，使文件可以直接运行
+if __name__ == "__main__":
+    import uvicorn
+    
+    # 确保tmp目录存在
+    os.makedirs(TEMP_DIR, exist_ok=True)
+    
+    # 打印启动信息
+    print(f"启动服务器...")
+    print(f"API文档可在 http://127.0.0.1:8000/docs 访问")
+    print(f"临时文件将保存在 {TEMP_DIR}")
+    
+    # 启动服务器
+    uvicorn.run(app, host="0.0.0.0", port=8000)
